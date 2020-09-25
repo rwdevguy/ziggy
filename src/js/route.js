@@ -13,8 +13,8 @@ class Route {
         // If  we're building a relative URL there's no origin, otherwise: if this route has a custom
         // domain we construct the origin with that, and if not we use the app URL
         const origin = !this.absolute ? '' : this.domain
-            ? `${this.baseProtocol}://${this.domain.replace(/\/$/, '')}${this.basePort ? `:${this.basePort}` : ''}`
-            : this.baseUrl.replace(/\/$/, '');
+            ? `${this.protocol}://${this.domain.replace(/\/$/, '')}${this.port ? `:${this.port}` : ''}`
+            : this.url.replace(/\/$/, '');
 
         return `${origin}/${this.uri}`.replace(/\/$/, '');
     }
@@ -63,11 +63,11 @@ class Router extends String {
         this._config = config ?? Ziggy ?? globalThis?.Ziggy;
 
         if (name) {
-            if (!this._config.namedRoutes[name]) {
+            if (!this._config.routes[name]) {
                 throw new Error(`Ziggy error: route '${name}' is not in the route list.`);
             }
 
-            this._route = new Route(name, this._config.namedRoutes[name], { ...this._config, absolute });
+            this._route = new Route(name, this._config.routes[name], { ...this._config, absolute });
             this._params = this._parse(params);
         }
     }
@@ -78,9 +78,9 @@ class Router extends String {
         params = ['string', 'number'].includes(typeof params) ? [params] : params;
 
         // Separate segments with and without defaults, and fill in the default values
-        const segments = route.segments.filter(({ name }) => !this._config.defaultParameters[name]);
-        const defaults = route.segments.filter(({ name }) => this._config.defaultParameters[name])
-            .reduce((result, { name }, i) => ({ ...result, [name]: this._config.defaultParameters[name] }), {});
+        const segments = route.segments.filter(({ name }) => !this._config.defaults[name]);
+        const defaults = route.segments.filter(({ name }) => this._config.defaults[name])
+            .reduce((result, { name }, i) => ({ ...result, [name]: this._config.defaults[name] }), {});
 
         if (Array.isArray(params)) {
             // If the parameters are an array they have to be in order, so we can transform them into
@@ -109,7 +109,7 @@ class Router extends String {
     // Get the parameter values from the current window URL, based on the given route definition
     _dehydrate(route) {
         let pathname = window.location.pathname
-            .replace(this._config.baseUrl.replace(/^\w*:\/\/[^/]+/, ''), '') // Remove subdirectories
+            .replace(this._config.url.replace(/^\w*:\/\/[^/]+/, ''), '') // Remove subdirectories
             .replace(/^\/+/, '');
 
         // Given the hydrated string, template, and delimiter, extract and return
@@ -138,7 +138,7 @@ class Router extends String {
         const url = (({ host, pathname }) => `${host}${pathname}`.replace(/\/$/, ''))(window.location);
 
         // Find the first named route that matches the current URL
-        const [current, route] = Object.entries(this._config.namedRoutes).find(
+        const [current, route] = Object.entries(this._config.routes).find(
             ([_, route]) => new Route(name, route, this._config).current(url)
         );
 
@@ -163,12 +163,12 @@ class Router extends String {
 
     // Get the parameter values from the current window URL
     get params() {
-        return this._dehydrate(this._config.namedRoutes[this.current()]);
+        return this._dehydrate(this._config.routes[this.current()]);
     }
 
     // Check whether the given named route exists
     has(name) {
-        return Object.keys(this._config.namedRoutes).includes(name);
+        return Object.keys(this._config.routes).includes(name);
     }
 
     // Add query parameters to be appended to the hydrated URL

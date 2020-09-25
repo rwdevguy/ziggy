@@ -10,10 +10,9 @@ use ReflectionMethod;
 
 class Ziggy implements JsonSerializable
 {
-    protected $baseDomain;
-    protected $basePort;
-    protected $baseProtocol;
-    protected $baseUrl;
+    protected $port;
+    protected $protocol;
+    protected $url;
     protected $group;
     protected $routes;
 
@@ -21,12 +20,11 @@ class Ziggy implements JsonSerializable
     {
         $this->group = $group;
 
-        $this->baseUrl = Str::finish($url ?? url('/'), '/');
+        $this->url = Str::finish($url ?? url('/'), '/');
 
-        tap(parse_url($this->baseUrl), function ($url) {
-            $this->baseProtocol = $url['scheme'] ?? 'http';
-            $this->baseDomain = $url['host'] ?? '';
-            $this->basePort = $url['port'] ?? null;
+        tap(parse_url($this->url), function ($url) {
+            $this->protocol = $url['scheme'] ?? 'http';
+            $this->port = $url['port'] ?? null;
         });
 
         $this->routes = $this->nameKeyedRoutes();
@@ -135,14 +133,13 @@ class Ziggy implements JsonSerializable
     public function toArray(): array
     {
         return [
-            'baseUrl' => $this->baseUrl,
-            'baseProtocol' => $this->baseProtocol,
-            'baseDomain' => $this->baseDomain,
-            'basePort' => $this->basePort,
-            'defaultParameters' => method_exists(app('url'), 'getDefaultParameters')
+            'url' => $this->url,
+            'protocol' => $this->protocol,
+            'port' => $this->port,
+            'defaults' => method_exists(app('url'), 'getDefaultParameters')
                 ? app('url')->getDefaultParameters()
                 : [],
-            'namedRoutes' => $this->applyFilters($this->group)->toArray(),
+            'routes' => $this->applyFilters($this->group)->toArray(),
         ];
     }
 
