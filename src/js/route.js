@@ -124,11 +124,11 @@ class Router extends String {
             .replace(/(\/\{[^\}]*\?\})/g, '/')
             .replace(/(\{[^\}]*\})/gi, '[^/?]+')
             .replace(/\/?$/, '')
-            .split('://')[1];
+            .replace(/^(https?:)*\/\//gi, '');
 
         let searchTemplate = this.template
             .replace(/(\{[^\}]*\})/gi, '[^/?]+')
-            .split('://')[1];
+            .replace(/^(https?:)*\/\//gi, '');
         let urlWithTrailingSlash = windowUrl.replace(/\/?$/, '/');
 
         const regularSearch = new RegExp('^' + searchTemplate + '/$').test(

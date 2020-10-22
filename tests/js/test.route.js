@@ -519,40 +519,60 @@ describe('route()', function() {
         let orgBaseDomain = Ziggy.baseDomain;
         let orgBasePort = Ziggy.basePort;
 
-        global.Ziggy.baseUrl = 'http://myapp.dev:81/';
-        global.Ziggy.baseDomain = 'myapp.dev';
-        global.Ziggy.basePort = 81;
+        [
+            function () {
+                global.Ziggy.baseUrl = 'http://myapp.dev:81/';
+                global.Ziggy.baseDomain = 'myapp.dev';
+                global.Ziggy.basePort = 81;
 
-        global.window = {
-            location: {
-                hostname: 'myapp.dev',
-                pathname: '/events/1/venues/2',
-                port: '81',
-                protocol: 'http:'
+                global.window = {
+                    location: {
+                        hostname: 'myapp.dev',
+                        pathname: '/events/1/venues/2',
+                        port: '81',
+                        protocol: 'http:'
+                    }
+                };
+            },
+            function () {
+                global.Ziggy.baseUrl = '//localhost:3000/';
+                global.Ziggy.baseDomain = 'localhost:3000';
+                global.Ziggy.basePort = 3000;
+
+                global.window = {
+                    location: {
+                        hostname: "localhost",
+                        pathname: '/events/1/venues/2',
+                        port: "3000",
+                        protocol: 'http:'
+                    }
+                };
             }
-        };
+        ].forEach(setUp => {
+            setUp();
 
-        assert.equal('events.venues.show', route().current());
+            assert.equal('events.venues.show', route().current());
 
-        assert.equal(true, route().current('events.venues.show'));
+            assert.equal(true, route().current('events.venues.show'));
 
-        assert.equal(false, route().current('events.venues.index'));
+            assert.equal(false, route().current('events.venues.index'));
 
-        assert.equal(true, route().current('events.venues.*'));
+            assert.equal(true, route().current('events.venues.*'));
 
-        assert.equal(false, route().current('events.users.*'));
+            assert.equal(false, route().current('events.users.*'));
 
-        assert.equal(true, route().current('events.*.show'));
+            assert.equal(true, route().current('events.*.show'));
 
-        assert.equal(true, route().current('*.venues.show'));
+            assert.equal(true, route().current('*.venues.show'));
 
-        assert.equal(false, route().current('*.users.show'));
+            assert.equal(false, route().current('*.users.show'));
 
-        assert.equal(false, route().current('events'));
+            assert.equal(false, route().current('events'));
 
-        assert.equal(true, route().current('events.*'));
+            assert.equal(true, route().current('events.*'));
 
-        assert.equal(false, route().current('show'));
+            assert.equal(false, route().current('show'));
+        });
 
         global.Ziggy.baseUrl = orgBaseUrl;
         global.Ziggy.baseDomain = orgBaseDomain;
